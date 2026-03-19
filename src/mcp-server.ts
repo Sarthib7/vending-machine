@@ -187,7 +187,7 @@ function handleRequest(request: JsonRpcRequest): void {
         description: "Minimal procurement MCP server for the Vending Machine MVP."
       },
       instructions:
-        "Use vend_query to procure a result from mock providers. This MVP simulates negotiation and settlement."
+        "Use vend_query for local MCP access to the vend engine. The paid MPP flow is exposed separately on the HTTP API at POST /api/v1/vend."
     });
     return;
   }

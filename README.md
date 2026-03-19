@@ -35,6 +35,13 @@ npm install
 
 Tempo CLI is installed at `"$HOME/.tempo/bin/tempo"`.
 
+Install the required CLI extensions:
+
+```bash
+"$HOME/.tempo/bin/tempo" add wallet
+"$HOME/.tempo/bin/tempo" add request
+```
+
 Finish the wallet setup:
 
 ```bash
