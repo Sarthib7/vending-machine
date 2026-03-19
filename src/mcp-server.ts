@@ -45,6 +45,16 @@ const tools: ToolDefinition[] = [
             speed: { type: "string", enum: ["fast", "balanced", "cheap"] },
             minReputation: { type: "number", minimum: 0, maximum: 1 }
           }
+        },
+        negotiation: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            batchSize: { type: "number", minimum: 1 },
+            allowPartialFulfillment: { type: "boolean" },
+            allowCounterOffers: { type: "boolean" },
+            autoAcceptLowest: { type: "boolean" }
+          }
         }
       },
       required: ["query", "maxBudget"]
@@ -149,8 +159,29 @@ function handleToolCall(name: string, args: ToolCallArgs | undefined): unknown {
                   : undefined
             }
           : undefined;
+      const negotiation =
+        safeArgs.negotiation && typeof safeArgs.negotiation === "object"
+          ? {
+              batchSize:
+                typeof (safeArgs.negotiation as Record<string, unknown>).batchSize === "number"
+                  ? ((safeArgs.negotiation as Record<string, unknown>).batchSize as number)
+                  : undefined,
+              allowPartialFulfillment:
+                typeof (safeArgs.negotiation as Record<string, unknown>).allowPartialFulfillment === "boolean"
+                  ? ((safeArgs.negotiation as Record<string, unknown>).allowPartialFulfillment as boolean)
+                  : undefined,
+              allowCounterOffers:
+                typeof (safeArgs.negotiation as Record<string, unknown>).allowCounterOffers === "boolean"
+                  ? ((safeArgs.negotiation as Record<string, unknown>).allowCounterOffers as boolean)
+                  : undefined,
+              autoAcceptLowest:
+                typeof (safeArgs.negotiation as Record<string, unknown>).autoAcceptLowest === "boolean"
+                  ? ((safeArgs.negotiation as Record<string, unknown>).autoAcceptLowest as boolean)
+                  : undefined
+            }
+          : undefined;
 
-      return textResult(vend({ query, category, maxBudget, preferences }));
+      return textResult(vend({ query, category, maxBudget, preferences, negotiation }));
     }
     case "get_vend_status": {
       const vendId = requireString(safeArgs, "vendId");

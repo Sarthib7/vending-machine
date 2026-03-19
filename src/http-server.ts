@@ -59,6 +59,27 @@ function validateVendInput(value: unknown): VendInput {
                 ? ((preferences as Record<string, unknown>).minReputation as number)
                 : undefined
           }
+        : undefined,
+    negotiation:
+      candidate.negotiation && typeof candidate.negotiation === "object"
+        ? {
+            batchSize:
+              typeof (candidate.negotiation as Record<string, unknown>).batchSize === "number"
+                ? ((candidate.negotiation as Record<string, unknown>).batchSize as number)
+                : undefined,
+            allowPartialFulfillment:
+              typeof (candidate.negotiation as Record<string, unknown>).allowPartialFulfillment === "boolean"
+                ? ((candidate.negotiation as Record<string, unknown>).allowPartialFulfillment as boolean)
+                : undefined,
+            allowCounterOffers:
+              typeof (candidate.negotiation as Record<string, unknown>).allowCounterOffers === "boolean"
+                ? ((candidate.negotiation as Record<string, unknown>).allowCounterOffers as boolean)
+                : undefined,
+            autoAcceptLowest:
+              typeof (candidate.negotiation as Record<string, unknown>).autoAcceptLowest === "boolean"
+                ? ((candidate.negotiation as Record<string, unknown>).autoAcceptLowest as boolean)
+                : undefined
+          }
         : undefined
   };
 }

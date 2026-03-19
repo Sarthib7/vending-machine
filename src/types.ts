@@ -7,11 +7,19 @@ export interface VendPreferences {
   minReputation?: number;
 }
 
+export interface NegotiationOptions {
+  batchSize?: number;
+  allowPartialFulfillment?: boolean;
+  allowCounterOffers?: boolean;
+  autoAcceptLowest?: boolean;
+}
+
 export interface VendInput {
   query: string;
   category?: Category;
   maxBudget: number;
   preferences?: VendPreferences;
+  negotiation?: NegotiationOptions;
 }
 
 export interface ProviderOffer {
