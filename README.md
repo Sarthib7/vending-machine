@@ -35,6 +35,7 @@ npm run demo:ascii
 npm run providers:demo
 npm run vend:demo
 npm run contract:payload:demo
+npm run tempo:wallet
 ```
 
 If you want the executable in your shell:
@@ -296,7 +297,9 @@ src/
 contracts/
   VendingMachineLedger.sol
 script/
+  check_tempo_balances.sh
   deploy_tempo.sh
+  fund_tempo.sh
 ```
 
 ## Run locally
@@ -321,49 +324,72 @@ npm run check
 
 ## Tempo setup
 
-Tempo is used here as the MPP client path.
+This repo is now wired for Tempo only:
 
-Install the CLI extensions:
+- MPP payments on the HTTP edge use Tempo via `mppx`
+- onchain receipts deploy to the public Tempo Moderato testnet
+- contract build and deploy use the Tempo Foundry fork explicitly, not whichever `forge` happens to be first in `PATH`
+
+Install the Tempo CLI extensions:
 
 ```bash
 "$HOME/.tempo/bin/tempo" add wallet
 "$HOME/.tempo/bin/tempo" add request
 ```
 
-Log in:
+Log in and confirm the wallet is ready:
 
 ```bash
 "$HOME/.tempo/bin/tempo" wallet login
-"$HOME/.tempo/bin/tempo" wallet -t whoami
+npm run tempo:wallet
 ```
 
-Use the wallet address returned by `tempo wallet -t whoami` as `TEMPO_RECIPIENT`.
+Install the Tempo Foundry toolchain:
 
-The only required environment variable for the paid route is:
+```bash
+foundryup -n tempo
+"$HOME/.foundry/bin/forge" -V
+```
+
+The wallet output from `tempo wallet -t whoami` should give you the underlying `0x...` address. Use it for both:
+
+- `TEMPO_RECIPIENT`: recipient for the paid HTTP API
+- `TEMPO_SENDER`: sender for interactive Tempo contract deployment
+
+Recommended local environment:
 
 ```bash
 TEMPO_RECIPIENT=
-```
-
-Optional:
-
-```bash
+TEMPO_SENDER=
 TEMPO_CURRENCY=0x20c0000000000000000000000000000000000000
-TEMPO_RPC_URL=
+TEMPO_FEE_TOKEN=0x20c0000000000000000000000000000000000001
+TEMPO_RPC_URL=https://rpc.moderato.tempo.xyz
+VERIFIER_URL=https://contracts.tempo.xyz
 DEPLOYER_PRIVATE_KEY=
 PORT=3000
 ```
 
-`TEMPO_CURRENCY` defaults to PathUSD on Tempo.
-`TEMPO_RPC_URL` is used for the contract deployment path.
+What these mean:
 
-If you are using the shared Tempo RPC for this project:
+- `TEMPO_CURRENCY` is the MPP payment asset for `POST /api/v1/vend` and defaults to PathUSD
+- `TEMPO_FEE_TOKEN` is the stablecoin used for onchain transaction fees and defaults to AlphaUSD
+- `TEMPO_RPC_URL` defaults to the official public Moderato RPC on chain `42431`
+- `VERIFIER_URL` defaults to Tempo's contract verifier
+- `DEPLOYER_PRIVATE_KEY` is optional and only needed if you want non-interactive deploys
+
+Tempo does not use a native gas token the same way standard EVM testnets do. Fees are paid in supported stablecoins, which is why the repo keeps the MPP currency and the fee token separate.
+
+## Tempo funding
+
+Once the wallet is logged in and you know the underlying `0x...` address:
 
 ```bash
-TEMPO_RPC_URL=https://gracious-knuth:goofy-chandrasekhar@rpc.tempo.xyz
+TEMPO_SENDER=0xYourTempoAddress npm run tempo:fund
+TEMPO_SENDER=0xYourTempoAddress npm run tempo:balances
 ```
 
-Keep that URL in your local environment rather than hardcoding it into app code because it contains credentials.
+`tempo:fund` calls `tempo_fundAddress` against the public Moderato RPC.
+`tempo:balances` checks both PathUSD and AlphaUSD for the same address so you can confirm the API and contract layers are funded consistently.
 
 ## Start the services
 
@@ -381,19 +407,33 @@ npm run dev:mcp
 
 ## Contract build and deployment
 
-Build the Tempo contract:
+Build the receipt contract with Tempo Foundry:
 
 ```bash
 npm run contracts:build
 ```
 
-Deploy the receipt layer:
+Deploy from your Tempo wallet interactively:
 
 ```bash
-TEMPO_RPC_URL=https://gracious-knuth:goofy-chandrasekhar@rpc.tempo.xyz \
-DEPLOYER_PRIVATE_KEY=... \
+TEMPO_SENDER=0xYourTempoAddress \
 npm run deploy:tempo
 ```
+
+Private-key deployment still works if you need CI or a non-interactive path:
+
+```bash
+DEPLOYER_PRIVATE_KEY=0xYourPrivateKey \
+npm run deploy:tempo
+```
+
+The deploy script:
+
+- uses `"$HOME/.foundry/bin/forge"` directly
+- targets `https://rpc.moderato.tempo.xyz` by default
+- sets Tempo's verifier URL automatically
+- passes `--tempo.fee-token` explicitly
+- broadcasts and verifies in one command
 
 Generate the payload for `recordVend(...)` from the CLI:
 
@@ -449,11 +489,12 @@ This repo has been verified with:
 - `npm install`
 - `npm run check`
 - `npm run build`
-- `npm run contracts:build` attempted
+- `npm run contracts:build`
 - HTTP boot smoke test
 - `GET /health`
 - `GET /api/v1/providers`
 - MCP `initialize` and `tools/list` handshake smoke test
+- Tempo Foundry toolchain check against Moderato (`42431`)
 
 ## Current state
 
@@ -464,7 +505,7 @@ What is real:
 - package-shaped CLI
 - paid HTTP edge with MPP challenge flow
 - explicit negotiation layer
-- deployable Tempo receipt contract
+- Tempo-exclusive receipt contract deployment path
 - batch and auction policy in the request model
 - auto-selection of the best offer
 - local MCP tool surface
