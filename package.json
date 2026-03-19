@@ -1,0 +1,29 @@
+{
+  "name": "vending-machine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal MCP MVP for the Vending Machine procurement engine",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "dev:http": "tsx src/http-server.ts",
+    "dev:mcp": "tsx src/mcp-server.ts",
+    "start:http": "node dist/http-server.js",
+    "start:mcp": "node dist/mcp-server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "hono": "^4.12.8",
+    "mppx": "^0.4.7",
+    "viem": "^2.47.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
