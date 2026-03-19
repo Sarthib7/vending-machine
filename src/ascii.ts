@@ -14,6 +14,10 @@ function pad(value: string, width: number): string {
   return value.length >= width ? value.slice(0, width) : `${value}${" ".repeat(width - value.length)}`;
 }
 
+function shorten(value: string, width: number): string {
+  return value.length <= width ? value : `${value.slice(0, Math.max(0, width - 1))}~`;
+}
+
 function box(title: string, body: string[], ticket?: string[]): string {
   const lines = [
     `.${"-".repeat(SCREEN_WIDTH + 2)}.`,
@@ -36,7 +40,7 @@ function box(title: string, body: string[], ticket?: string[]): string {
 }
 
 function offerLine(label: string, price: string, latency: string, active = false): string {
-  return `${active ? ">" : " "} ${pad(label, 10)} ${pad(price, 5)} ${pad(latency, 6)}`;
+  return `${active ? ">" : " "} ${pad(shorten(label, 10), 10)} ${pad(price, 5)} ${pad(latency, 6)}`;
 }
 
 export function renderDemoFrames(): string[] {
@@ -105,9 +109,9 @@ export async function animateDemo(loops = 2, delayMs = 520): Promise<void> {
 
 export function renderProviders(providers: Provider[]): string {
   return [
-    "category       provider                  price    latency",
+    "category         provider                  price    latency",
     ...providers.map((provider) =>
-      `${pad(provider.category, 14)} ${pad(provider.name, 25)} ${pad(`$${provider.basePrice.toFixed(2)}`, 8)} ${provider.avgLatencyMs}ms`
+      `${pad(shorten(provider.category, 16), 16)} ${pad(shorten(provider.name, 25), 25)} ${pad(`$${provider.basePrice.toFixed(2)}`, 8)} ${provider.avgLatencyMs}ms`
     )
   ].join("\n");
 }
@@ -118,9 +122,9 @@ export function renderVendSummary(record: VendRecord): string {
   return box(
     "THE VENDING MACHINE",
     [
-      `query  : ${record.query.slice(0, 20)}`,
+      `query  : ${shorten(record.query, 20)}`,
       `budget : $${record.maxBudget.toFixed(2)}`,
-      `winner : ${record.provider?.name.slice(0, 20) ?? "n/a"}`,
+      `winner : ${shorten(record.provider?.name ?? "n/a", 20)}`,
       `total  : $${record.cost?.total.toFixed(2) ?? "0.00"}`,
       "",
       ...offers.map((offer, index) =>
