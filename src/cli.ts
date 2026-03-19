@@ -5,6 +5,7 @@ import { listProviders, vend } from "./engine.js";
 import { validateCategory } from "./providers.js";
 import type { Category, PreferenceMode, VendInput } from "./types.js";
 import { asJson } from "./utils.js";
+import { keccak256, stringToHex } from "viem";
 
 type FlagMap = Record<string, string | boolean>;
 
@@ -81,11 +82,13 @@ Usage:
   vending-machine demo [--loops 2] [--delay 520]
   vending-machine providers [--category compliance] [--json]
   vending-machine vend --query "Screen Acme Corp for OFAC sanctions" --budget 1 [--speed balanced] [--min-reputation 0.8] [--batch-size 1] [--json]
+  vending-machine contract-payload --query "Screen Acme Corp for OFAC sanctions" --category compliance --provider "ComplianceCheck Express" --total 0.48 [--result-text "false|OFAC|EU|UN"]
 
 Examples:
   vending-machine demo
   vending-machine providers --category compliance
   vending-machine vend --query "Screen Acme Corp for OFAC sanctions" --budget 1 --speed balanced
+  vending-machine contract-payload --query "Screen Acme Corp for OFAC sanctions" --category compliance --provider "ComplianceCheck Express" --total 0.48
 `);
 }
 
@@ -130,6 +133,28 @@ async function run(): Promise<void> {
 
       const result = vend(input);
       process.stdout.write(json ? `${asJson(result)}\n` : `${renderVendSummary(result)}\n`);
+      return;
+    }
+    case "contract-payload": {
+      const query = readString(flags, "query");
+      const category = readString(flags, "category");
+      const provider = readString(flags, "provider");
+      const total = readNumber(flags, "total");
+      const resultText = readString(flags, "result-text") ?? "result";
+
+      if (!query || !category || !provider || typeof total !== "number") {
+        throw new Error("contract-payload requires --query, --category, --provider, and --total.");
+      }
+
+      const payload = {
+        queryHash: keccak256(stringToHex(query)),
+        resultHash: keccak256(stringToHex(resultText)),
+        totalPriceMicrousd: Math.round(total * 1_000_000),
+        category,
+        provider
+      };
+
+      process.stdout.write(`${asJson(payload)}\n`);
       return;
     }
     case "help":

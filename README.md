@@ -34,6 +34,7 @@ Quick tryout commands:
 npm run demo:ascii
 npm run providers:demo
 npm run vend:demo
+npm run contract:payload:demo
 ```
 
 If you want the executable in your shell:
@@ -65,6 +66,7 @@ The CLI supports:
 - `vending-machine demo`
 - `vending-machine providers`
 - `vending-machine vend --query ... --budget ...`
+- `vending-machine contract-payload --query ... --category ... --provider ... --total ...`
 
 ## Why this exists
 
@@ -161,6 +163,26 @@ The adapter boundary is deliberate:
 
 - today: local negotiation execution against an in-memory provider registry
 - next: replace the local auction runner with HTTP calls into `x402n`
+
+## Onchain layer
+
+The negotiation loop stays offchain. The smart contract is a thin onchain receipt layer for auditable vend records on Tempo.
+
+[contracts/VendingMachineLedger.sol](/Users/sarthiborkar/Build/vending-machine/contracts/VendingMachineLedger.sol) stores:
+
+- requester address
+- `queryHash`
+- `resultHash`
+- `totalPriceMicrousd`
+- `category`
+- `provider`
+- timestamp
+
+This keeps the architecture honest:
+
+- routing and negotiation remain fast and flexible offchain
+- Tempo gets an immutable receipt layer
+- the CLI can prepare the exact payload for contract writes
 
 ## What is implemented
 
@@ -260,14 +282,21 @@ Important request inputs:
 
 ```text
 src/
+  ascii.ts               shared terminal rendering
+  cli.ts                 package binary entrypoint
   engine.ts              vend orchestration and result finalization
   http-server.ts         Hono API + MPP payment gate
+  index.ts               package exports
   mcp-server.ts          stdio MCP server
   negotiation-layer.ts   batching + auction + ranking layer
   providers.ts           mock provider registry
   router.ts              query classification
   store.ts               in-memory storage
   types.ts               shared contracts
+contracts/
+  VendingMachineLedger.sol
+script/
+  deploy_tempo.sh
 ```
 
 ## Run locally
@@ -320,10 +349,21 @@ Optional:
 
 ```bash
 TEMPO_CURRENCY=0x20c0000000000000000000000000000000000000
+TEMPO_RPC_URL=
+DEPLOYER_PRIVATE_KEY=
 PORT=3000
 ```
 
 `TEMPO_CURRENCY` defaults to PathUSD on Tempo.
+`TEMPO_RPC_URL` is used for the contract deployment path.
+
+If you are using the shared Tempo RPC for this project:
+
+```bash
+TEMPO_RPC_URL=https://gracious-knuth:goofy-chandrasekhar@rpc.tempo.xyz
+```
+
+Keep that URL in your local environment rather than hardcoding it into app code because it contains credentials.
 
 ## Start the services
 
@@ -337,6 +377,33 @@ MCP server:
 
 ```bash
 npm run dev:mcp
+```
+
+## Contract build and deployment
+
+Build the Tempo contract:
+
+```bash
+npm run contracts:build
+```
+
+Deploy the receipt layer:
+
+```bash
+TEMPO_RPC_URL=https://gracious-knuth:goofy-chandrasekhar@rpc.tempo.xyz \
+DEPLOYER_PRIVATE_KEY=... \
+npm run deploy:tempo
+```
+
+Generate the payload for `recordVend(...)` from the CLI:
+
+```bash
+vending-machine contract-payload \
+  --query "Screen Acme Corp for OFAC sanctions" \
+  --category compliance \
+  --provider "ComplianceCheck Express" \
+  --total 0.48 \
+  --result-text "match:false|sources:OFAC,EU,UN"
 ```
 
 ## Call the paid vend API
@@ -382,6 +449,7 @@ This repo has been verified with:
 - `npm install`
 - `npm run check`
 - `npm run build`
+- `npm run contracts:build` attempted
 - HTTP boot smoke test
 - `GET /health`
 - `GET /api/v1/providers`
@@ -393,8 +461,10 @@ This is a serious backend MVP, not a mock landing page.
 
 What is real:
 
+- package-shaped CLI
 - paid HTTP edge with MPP challenge flow
 - explicit negotiation layer
+- deployable Tempo receipt contract
 - batch and auction policy in the request model
 - auto-selection of the best offer
 - local MCP tool surface
