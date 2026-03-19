@@ -12,39 +12,59 @@ This repository is the backend-only hackathon MVP:
 - one local MCP server over stdio
 - one explicit negotiation layer for batching, auctioning, and winner selection
 
-## Retro demo
+## CLI
 
-Terminal demo:
+This repo now has a package-shaped CLI so the vending machine is directly tryable from the terminal.
+
+Build it:
+
+```bash
+npm run build
+```
+
+Run it in development:
+
+```bash
+npm run cli -- help
+```
+
+Quick tryout commands:
 
 ```bash
 npm run demo:ascii
+npm run providers:demo
+npm run vend:demo
 ```
 
-```text
-        _________________________________
-       /  _____________________________  \
-      /  / THE VENDING MACHINE       /|  \
-     /__/___________________________/ |___\
-     |  |                           | |   |
-     |  |  [ compliance ]   $0.42   | |   |
-     |  |  [ b2b_data   ]   $0.21   | |   |
-     |  |  [ ai_infer   ]   $0.11   | |   |
-     |  |---------------------------| |   |
-     |  |  query  : sanctions       | |   |
-     |  |  budget : $1.00           | |   |
-     |  |  state  : auction live    | |   |
-     |  |---------------------------| |   |
-     |  |  rank #1  B 180ms  0.88   | |   |
-     |  |  rank #2  A 240ms  0.97   | |   |
-     |  |___________________________| |   |
-     | /__________ DISPENSE ________\ |   |
-     |/_____________ RESULT _________\|   |
-     /___________________________________\
-        |   [][][]   | 402 |   [][][]   |
-        |____________|_____|____________|
-           /   /                 \   \
-          /___/                   \___\
+If you want the executable in your shell:
+
+```bash
+npm link
+vending-machine help
 ```
+
+README preview:
+
+```text
+      .--------------------------------.
+      | THE VENDING MACHINE            |
+      |--------------------------------|
+      | query  : sanctions screen      |
+      | budget : $1.00                 |
+      | winner : ComplianceCheck Expr  |
+      | total  : $0.48                 |
+      |                                |
+      | > #1 Compli  $0.42 180ms       |
+      |   #2 Sancti  $0.57 240ms       |
+      |________________________________|
+             \\____________//
+```
+
+The CLI supports:
+
+- `vending-machine demo`
+- `vending-machine providers`
+- `vending-machine vend --query ... --budget ...`
 
 ## Why this exists
 

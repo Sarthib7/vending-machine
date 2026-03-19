@@ -1,17 +1,37 @@
 {
-  "name": "vending-machine",
+  "name": "@kairen/vending-machine",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Minimal MCP MVP for the Vending Machine procurement engine",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "vending-machine": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".env.example"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
-    "demo:ascii": "tsx src/ascii-demo.ts",
+    "cli": "tsx src/cli.ts",
+    "demo:ascii": "tsx src/cli.ts demo",
     "dev:http": "tsx src/http-server.ts",
     "dev:mcp": "tsx src/mcp-server.ts",
+    "providers:demo": "tsx src/cli.ts providers",
+    "vend:demo": "tsx src/cli.ts vend --query \"Screen Acme Corp for OFAC sanctions\" --budget 1 --speed balanced",
     "start:http": "node dist/http-server.js",
-    "start:mcp": "node dist/mcp-server.js"
+    "start:mcp": "node dist/mcp-server.js",
+    "start:cli": "node dist/cli.js"
   },
   "engines": {
     "node": ">=22"
