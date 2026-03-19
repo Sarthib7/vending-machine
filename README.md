@@ -12,6 +12,40 @@ This repository is the backend-only hackathon MVP:
 - one local MCP server over stdio
 - one explicit negotiation layer for batching, auctioning, and winner selection
 
+## Retro demo
+
+Terminal demo:
+
+```bash
+npm run demo:ascii
+```
+
+```text
+        _________________________________
+       /  _____________________________  \
+      /  / THE VENDING MACHINE       /|  \
+     /__/___________________________/ |___\
+     |  |                           | |   |
+     |  |  [ compliance ]   $0.42   | |   |
+     |  |  [ b2b_data   ]   $0.21   | |   |
+     |  |  [ ai_infer   ]   $0.11   | |   |
+     |  |---------------------------| |   |
+     |  |  query  : sanctions       | |   |
+     |  |  budget : $1.00           | |   |
+     |  |  state  : auction live    | |   |
+     |  |---------------------------| |   |
+     |  |  rank #1  B 180ms  0.88   | |   |
+     |  |  rank #2  A 240ms  0.97   | |   |
+     |  |___________________________| |   |
+     | /__________ DISPENSE ________\ |   |
+     |/_____________ RESULT _________\|   |
+     /___________________________________\
+        |   [][][]   | 402 |   [][][]   |
+        |____________|_____|____________|
+           /   /                 \   \
+          /___/                   \___\
+```
+
 ## Why this exists
 
 An MPP directory is a list of services.
