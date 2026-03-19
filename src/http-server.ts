@@ -5,10 +5,10 @@ import type { Address } from "viem";
 import { createProvider, finalizeVend, getVend, listProviders, prepareVend } from "./engine.js";
 import { validateCategory } from "./providers.js";
 import type { Provider, VendInput } from "./types.js";
-import { createId } from "./utils.js";
+import { createId, normalizeTempoAddress } from "./utils.js";
 
 const port = Number(process.env.PORT ?? 3000);
-const tempoRecipient = process.env.TEMPO_RECIPIENT;
+const tempoRecipient = normalizeTempoAddress(process.env.TEMPO_RECIPIENT);
 const tempoCurrency = (process.env.TEMPO_CURRENCY ?? "0x20c0000000000000000000000000000000000000") as Address;
 
 const app = new Hono();

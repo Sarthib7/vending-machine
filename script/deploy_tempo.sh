@@ -6,6 +6,11 @@ TEMPO_RPC_URL="${TEMPO_RPC_URL:-https://rpc.moderato.tempo.xyz}"
 VERIFIER_URL="${VERIFIER_URL:-https://contracts.tempo.xyz}"
 TEMPO_FEE_TOKEN="${TEMPO_FEE_TOKEN:-0x20c0000000000000000000000000000000000001}"
 CONTRACT_NAME="contracts/VendingMachineLedger.sol:VendingMachineLedger"
+sender="${TEMPO_SENDER:-}"
+
+if [[ "$sender" == tempox0x* ]]; then
+  sender="${sender#tempox}"
+fi
 
 if [[ ! -x "$FORGE_BIN" ]]; then
   echo "Tempo Foundry forge binary not found at $FORGE_BIN. Run foundryup -n tempo first." >&2
@@ -33,8 +38,8 @@ if [[ -n "${DEPLOYER_PRIVATE_KEY:-}" ]]; then
   args+=(--private-key "$DEPLOYER_PRIVATE_KEY")
 else
   args+=(--interactive)
-  if [[ -n "${TEMPO_SENDER:-}" ]]; then
-    args+=(--sender "$TEMPO_SENDER")
+  if [[ -n "$sender" ]]; then
+    args+=(--sender "$sender")
   fi
 fi
 
@@ -42,8 +47,8 @@ printf 'Deploying %s\n' "$CONTRACT_NAME"
 printf 'RPC: %s\n' "$TEMPO_RPC_URL"
 printf 'Verifier: %s\n' "$VERIFIER_URL"
 printf 'Fee token: %s\n' "$TEMPO_FEE_TOKEN"
-if [[ -n "${TEMPO_SENDER:-}" ]]; then
-  printf 'Sender: %s\n' "$TEMPO_SENDER"
+if [[ -n "$sender" ]]; then
+  printf 'Sender: %s\n' "$sender"
 fi
 
 exec "$FORGE_BIN" "${args[@]}"

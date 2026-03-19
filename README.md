@@ -351,7 +351,9 @@ foundryup -n tempo
 "$HOME/.foundry/bin/forge" -V
 ```
 
-The wallet output from `tempo wallet -t whoami` should give you the underlying `0x...` address. Use it for both:
+The wallet output from `tempo wallet -t whoami` may appear either as `tempox0x...` or raw `0x...`.
+This repo accepts either form and normalizes it to the underlying EVM address for Foundry and `mppx`.
+Use that address for both:
 
 - `TEMPO_RECIPIENT`: recipient for the paid HTTP API
 - `TEMPO_SENDER`: sender for interactive Tempo contract deployment
@@ -384,8 +386,8 @@ Tempo does not use a native gas token the same way standard EVM testnets do. Fee
 Once the wallet is logged in and you know the underlying `0x...` address:
 
 ```bash
-TEMPO_SENDER=0xYourTempoAddress npm run tempo:fund
-TEMPO_SENDER=0xYourTempoAddress npm run tempo:balances
+TEMPO_SENDER=tempox0xYourTempoAddress npm run tempo:fund
+TEMPO_SENDER=tempox0xYourTempoAddress npm run tempo:balances
 ```
 
 `tempo:fund` calls `tempo_fundAddress` against the public Moderato RPC.
@@ -416,7 +418,7 @@ npm run contracts:build
 Deploy from your Tempo wallet interactively:
 
 ```bash
-TEMPO_SENDER=0xYourTempoAddress \
+TEMPO_SENDER=tempox0xYourTempoAddress \
 npm run deploy:tempo
 ```
 
