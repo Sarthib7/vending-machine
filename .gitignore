@@ -21,3 +21,5 @@ broadcast/
 
 # Local editor / OS noise
 .DS_Store
+.claude/
+compass_artifact_*.md
