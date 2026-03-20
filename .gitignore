@@ -1,6 +1,23 @@
-dist
-node_modules
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keys
+*.seed
+*.mnemonic
+*.keystore
+
+# Node / TypeScript
+node_modules/
+dist/
 *.log
-out
-cache
-broadcast
+
+# Foundry / Tempo build artifacts
+out/
+cache/
+broadcast/
+
+# Local editor / OS noise
+.DS_Store

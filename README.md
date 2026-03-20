@@ -36,6 +36,7 @@ npm run providers:demo
 npm run vend:demo
 npm run contract:payload:demo
 npm run tempo:wallet
+npm run tempo:access-key:new
 ```
 
 If you want the executable in your shell:
@@ -297,9 +298,13 @@ src/
 contracts/
   VendingMachineLedger.sol
 script/
-  check_tempo_balances.sh
-  deploy_tempo.sh
-  fund_tempo.sh
+  tempo/
+    authorize_access_key.sh
+    check_tempo_balances.sh
+    create_access_key.sh
+    deploy_tempo.sh
+    fund_tempo.sh
+    libtempo.sh
 ```
 
 ## Run locally
@@ -352,21 +357,28 @@ foundryup -n tempo
 ```
 
 The wallet output from `tempo wallet -t whoami` may appear either as `tempox0x...` or raw `0x...`.
-This repo accepts either form and normalizes it to the underlying EVM address for Foundry and `mppx`.
+This repo accepts either form and normalizes it to the underlying EVM address where needed.
 Use that address for both:
 
 - `TEMPO_RECIPIENT`: recipient for the paid HTTP API
-- `TEMPO_SENDER`: sender for interactive Tempo contract deployment
+- `TEMPO_SENDER`: wallet reference for funding and balance checks
+- `TEMPO_ROOT_ACCOUNT`: root account for access-key deployment
 
 Recommended local environment:
 
 ```bash
 TEMPO_RECIPIENT=
 TEMPO_SENDER=
+TEMPO_ROOT_ACCOUNT=
 TEMPO_CURRENCY=0x20c0000000000000000000000000000000000000
 TEMPO_FEE_TOKEN=0x20c0000000000000000000000000000000000001
 TEMPO_RPC_URL=https://rpc.moderato.tempo.xyz
 VERIFIER_URL=https://contracts.tempo.xyz
+TEMPO_ACCESS_KEY=
+TEMPO_ACCESS_KEY_EXPIRY=0
+TEMPO_ACCESS_KEY_ENFORCE_LIMITS=false
+TEMPO_ACCESS_KEY_LIMITS=[]
+ROOT_PRIVATE_KEY=
 DEPLOYER_PRIVATE_KEY=
 PORT=3000
 ```
@@ -377,6 +389,8 @@ What these mean:
 - `TEMPO_FEE_TOKEN` is the stablecoin used for onchain transaction fees and defaults to AlphaUSD
 - `TEMPO_RPC_URL` defaults to the official public Moderato RPC on chain `42431`
 - `VERIFIER_URL` defaults to Tempo's contract verifier
+- `TEMPO_ACCESS_KEY` is an optional delegated secp256k1 key used to deploy from a passkey-backed root account
+- `ROOT_PRIVATE_KEY` is only used to authorize a delegated access key on the account keychain precompile
 - `DEPLOYER_PRIVATE_KEY` is optional and only needed if you want non-interactive deploys
 
 Tempo does not use a native gas token the same way standard EVM testnets do. Fees are paid in supported stablecoins, which is why the repo keeps the MPP currency and the fee token separate.
@@ -392,6 +406,37 @@ TEMPO_SENDER=tempox0xYourTempoAddress npm run tempo:balances
 
 `tempo:fund` calls `tempo_fundAddress` against the public Moderato RPC.
 `tempo:balances` checks both PathUSD and AlphaUSD for the same address so you can confirm the API and contract layers are funded consistently.
+
+## Access-key deployment
+
+Tempo passkey accounts are best handled through delegated access keys.
+
+1. Generate a delegated key:
+
+```bash
+npm run tempo:access-key:new
+```
+
+2. Put the generated private key into `TEMPO_ACCESS_KEY` and point `TEMPO_ROOT_ACCOUNT` at your Tempo wallet address.
+
+3. Authorize that delegated key on the account keychain precompile:
+
+```bash
+TEMPO_ROOT_ACCOUNT=tempox0xYourTempoAddress \
+TEMPO_ACCESS_KEY=0xYourGeneratedAccessKey \
+npm run tempo:access-key:authorize
+```
+
+If your root signer is a raw private key, set `ROOT_PRIVATE_KEY`.
+If you want to try a browser-wallet signer instead, set `TEMPO_BROWSER_WALLET=1`.
+
+4. Deploy using the delegated key:
+
+```bash
+TEMPO_ROOT_ACCOUNT=tempox0xYourTempoAddress \
+TEMPO_ACCESS_KEY=0xYourGeneratedAccessKey \
+npm run deploy:tempo
+```
 
 ## Start the services
 
@@ -415,10 +460,18 @@ Build the receipt contract with Tempo Foundry:
 npm run contracts:build
 ```
 
-Deploy from your Tempo wallet interactively:
+Deploy with a raw signer prompt:
 
 ```bash
 TEMPO_SENDER=tempox0xYourTempoAddress \
+npm run deploy:tempo
+```
+
+Deploy from an authorized Tempo access key:
+
+```bash
+TEMPO_ROOT_ACCOUNT=tempox0xYourTempoAddress \
+TEMPO_ACCESS_KEY=0xYourGeneratedAccessKey \
 npm run deploy:tempo
 ```
 
@@ -435,6 +488,8 @@ The deploy script:
 - targets `https://rpc.moderato.tempo.xyz` by default
 - sets Tempo's verifier URL automatically
 - passes `--tempo.fee-token` explicitly
+- supports Tempo delegated signing via `--tempo.access-key --tempo.root-account`
+- uses Tempo's documented `forge create --interactive --broadcast --verify` path
 - broadcasts and verifies in one command
 
 Generate the payload for `recordVend(...)` from the CLI:
